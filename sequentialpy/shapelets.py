@@ -88,12 +88,15 @@ class Shapelets:
 	def pregenerate_segment_idxs(self, nelems):
 		self.segment_idxs = [generate_vl_segment_idxs(r, nelems, self.shapelet_min_length) for r in range(1, self.length_scales + 1)]
 
+	def shapelets_as_homogenous(self):
+		h_shapelets = np.zeros((self.length_scales, self.num_shapelets, self.length_scales * self.shapelet_min_length))
+		for r in range(self.length_scales):
+			h_shapelets[r][:, :(r + 1) * self.shapelet_min_length] = self.shapelets[r]
+		return h_shapelets
+
 	def transformed_representation(self, series):
 		with torch.no_grad():
-			h_shapelets = np.zeros((self.length_scales, self.num_shapelets, self.length_scales * self.shapelet_min_length))
-			for r in range(self.length_scales):
-				h_shapelets[r][:, :(r + 1) * self.shapelet_min_length] = self.shapelets[r]
-			return shapelet_transformed_representation(series, h_shapelets, self.num_shapelets, self.shapelet_min_length, self.length_scales)
+			return shapelet_transformed_representation(series, self.shapelets_as_homogenous(), self.num_shapelets, self.shapelet_min_length, self.length_scales)
 
 	def forward(self, x):
 		min_dists_x_weights = 0
