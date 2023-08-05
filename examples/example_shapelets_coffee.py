@@ -27,7 +27,7 @@ def test(shapelet_transform):
   test_labels = test_df.iloc[:, 0].to_numpy().reshape((-1, 1))
   for i in range(test_X.shape[0]):
     pred = shapelet_transform.forward(test_X[i])
-    print(f"[{i}] pred: {pred.data} actual: {test_labels[i]}")
+    print(f"[{i}] pred: {np.around(pred.detach().numpy(), 3)} actual: {test_labels[i]}") 
 
 """
 # K-means
@@ -95,7 +95,7 @@ if __name__ == "__main__":
       plt.tight_layout()
       plt.show()
 
-    if 1:
+    if 0:
       df = pd.read_csv(COFFEE_TRAIN_LOC)
       train_X = df.iloc[:, 1:].to_numpy()
       train_labels = df.iloc[:, 0].to_numpy().reshape((-1, 1))
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         labels = dict(zip(labels, handles))
         plt.legend(labels.values(), labels.keys())
         plt.show()
-      elif 1:
+      elif 0:
         plt.xlabel("$M_{1}$")
         plt.ylabel("$M_{2}$")
         for k in range(clusters_k):
