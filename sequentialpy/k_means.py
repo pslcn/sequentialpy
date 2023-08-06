@@ -24,11 +24,11 @@ def k_means_clusters_step(centroids, clusters_k, datapoints, nelems):
 
 @nb.njit(parallel=True)
 def k_means_with_centroids(clusters_k, datapoints, nelems, n_update_iters=6):
-	shuffled_idxs = np.arange(0, nelems)
-	np.random.shuffle(shuffled_idxs)
-	centroids = datapoints[shuffled_idxs[:clusters_k]]
-	for i in range(n_update_iters):
-		clusters = k_means_clusters_step(centroids, clusters_k, datapoints, nelems)
-		for k in range(clusters_k):
-			centroids[k] = (np.mean(clusters[k][:, 0]), np.mean(clusters[k][:, 1]))
-	return clusters, centroids
+  shuffled_idxs = np.arange(0, nelems)
+  np.random.shuffle(shuffled_idxs)
+  centroids = datapoints[shuffled_idxs[:clusters_k]]
+  for i in range(n_update_iters):
+    clusters = k_means_clusters_step(centroids, clusters_k, datapoints, nelems)
+    for k in range(clusters_k):
+      centroids[k] = (np.mean(clusters[k][:, 0]), np.mean(clusters[k][:, 1]))
+  return clusters, centroids
