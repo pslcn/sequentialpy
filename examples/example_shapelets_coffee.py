@@ -41,28 +41,6 @@ for k in range(clusters_k):
 plt.show()
 """
 
-def plot_vl_shapelets(shapelet_transform, length_scales, shapelet_min_length, num_shapelets):
-  import math
-
-  if length_scales >= 3:
-    col_nelems = math.ceil(length_scales ** 0.5)
-    fig, ax = plt.subplots(math.ceil(length_scales / col_nelems), col_nelems)
-  else:
-    fig, ax = plt.subplots(length_scales, 1)
-
-  fig.suptitle(f"Number of Shapelets: {num_shapelets}")
-
-  for r, ax_r in enumerate([an_ax for row in ax for an_ax in row] if ax.ndim == 2 else [an_ax for an_ax in ax]):
-    if r < length_scales:
-      ax_r.set_title(f"Shapelet Length: {(r + 1) * shapelet_min_length}")
-      for shapelet in shapelet_transform.shapelets[r].detach().numpy():
-        ax_r.plot(shapelet)
-  else:
-    ax_r.axis("off")
-
-  plt.tight_layout()
-  plt.show()
-
 def testing_k_means():
   df = pd.read_csv(COFFEE_TRAIN_LOC)
   train_X = df.iloc[:, 1:].to_numpy()
@@ -71,7 +49,7 @@ def testing_k_means():
 
 if __name__ == "__main__":
   if 0:
-    num_shapelets, shapelet_min_length, length_scales = 1, 30, 4
+    num_shapelets, shapelet_min_length, length_scales = 1, 25, 5
 
     if 0:
       shapelet_transform = testing_k_means()

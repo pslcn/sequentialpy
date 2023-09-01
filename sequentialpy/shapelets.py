@@ -10,9 +10,9 @@ from sequentialpy import k_means
 save_folder_path = "weights/"
 def save_info_appendix(num_shapelets, num_categories, shapelet_min_length, length_scales): return f"{num_shapelets}_{num_categories}_{shapelet_min_length}_{length_scales}.pt"
 
-@nb.njit(inline=True)
+@nb.njit(inline="always")
 def generate_segment_idxs(shapelet_length, nelems): return np.arange(0, shapelet_length, dtype=np.int32) + np.arange(0, nelems - shapelet_length).reshape((-1, 1))
-@nb.njit(inline=True)
+@nb.njit(inline="always")
 def generate_vl_segment_idxs(r, nelems, shapelet_min_length): return generate_segment_idxs(r * shapelet_min_length, nelems)
 
 @nb.njit
@@ -25,10 +25,10 @@ def generate_h_segment_idxs(length_scales, nelems, shapelet_min_length):
 
 @nb.njit
 def centroid_for_shapelets(num_cateories, init_with_centroids):
-	# disregard timesteps (x-axis)
-	centroid = k_means.k_means_with_centroids(num_categories, np.dstack((np.arange(0, init_with_centroids.shape[0]) + 1, init_with_centroids))[0], init_with_centroids.shape[0])[1]
-	centroid = centroid.reshape((2))[1]
-	return centroid
+  # disregard timesteps (x-axis)
+  centroid = k_means.k_means_with_centroids(num_categories, np.dstack((np.arange(0, init_with_centroids.shape[0]) + 1, init_with_centroids))[0], init_with_centroids.shape[0])[1]
+  centroid = centroid.reshape((2))[1]
+  return centroid
 
 
 @nb.njit(parallel=True)
@@ -79,30 +79,30 @@ class Shapelets:
     self.lambda_w = lambda_w
 
     info_appendix = save_info_appendix(self.num_shapelets, self.num_categories, self.shapelet_min_length, self.length_scales)
-		self.save_shapelets_loc = save_folder_path + "shapelets_" + info_appendix
-		self.save_biases_loc = save_folder_path + "biases_" + info_appendix
-		self.save_weights_loc = save_folder_path + "weights_" + info_appendix
-		if load_weights and all([os.path.exists(f) for f in [self.save_shapelets_loc, self.save_biases_loc, self.save_weights_loc]]):
-			print(f"Loading weights for (num_shapelets: {self.num_shapelets}, num_categories: {self.num_categories, shapelet_min_length: {self.shapelet_min_length}, length_scales: {self.length_scales})")
-			self.shapelets = list(torch.load(self.save_shapelets_loc))
-			self.biases = torch.load(self.save_biases_loc)
-			self.weights = list(torch.load(self.save_weights_loc))
-		else:
-			self.biases = torch.rand((self.num_categories), requires_grad=True, dtype=torch.float64)
-			self.shapelets, self.weights = [], []
+    self.save_shapelets_loc = save_folder_path + "shapelets_" + info_appendix
+    self.save_biases_loc = save_folder_path + "biases_" + info_appendix
+    self.save_weights_loc = save_folder_path + "weights_" + info_appendix
+    if load_weights and all([os.path.exists(f) for f in [self.save_shapelets_loc, self.save_biases_loc, self.save_weights_loc]]):
+      print(f"Loading weights for (num_shapelets: {self.num_shapelets}, num_categories: {self.num_categories}, shapelet_min_length: {self.shapelet_min_length}, length_scales: {self.length_scales})")
+      self.shapelets = list(torch.load(self.save_shapelets_loc))
+      self.biases = torch.load(self.save_biases_loc)
+      self.weights = list(torch.load(self.save_weights_loc))
+    else:
+      self.biases = torch.rand((self.num_categories), requires_grad=True, dtype=torch.float64)
+      self.shapelets, self.weights = [], []
 
-			def shapelet_append_value(r): return torch.rand((self.num_shapelets, r * self.shapelet_min_length), requires_grad=True, dtype=torch.float64))
-			if type(init_with_centroids) is np.ndarray:
-				print("Initialising shapelets using K-means centroids")
-				centroid = centroid_for_shapelets(self.num_categories, init_with_centroids)
-				def shapelet_append_value(r): return torch.full((self.num_shapelets, r * self.shapelet_min_length), centroid, requires_grad=True, dtype=torch.float64)
-			else: print("Initialising shapelets regularly")
-			for r in range(1, self.length_scales + 1):
-				self.weights.append(torch.rand((self.num_categories, self.num_shapelets), requires_grad=True, dtype=torch.float64))
-				self.shapelets.append(shapelet_append_value(r))
+      def shapelet_append_value(r): return torch.rand((self.num_shapelets, r * self.shapelet_min_length), requires_grad=True, dtype=torch.float64)
+      if type(init_with_centroids) is np.ndarray:
+        print("Initialising shapelets using K-means centroids")
+        centroid = centroid_for_shapelets(self.num_categories, init_with_centroids)
+        def shapelet_append_value(r): return torch.full((self.num_shapelets, r * self.shapelet_min_length), centroid, requires_grad=True, dtype=torch.float64)
+      else: print("Initialising shapelets regularly")
+      for r in range(1, self.length_scales + 1):
+        self.weights.append(torch.rand((self.num_categories, self.num_shapelets), requires_grad=True, dtype=torch.float64))
+        self.shapelets.append(shapelet_append_value(r))
 
-	def pregenerate_segment_idxs(self, nelems: int) -> None:
-		self.segment_idxs = [generate_vl_segment_idxs(r, nelems, self.shapelet_min_length) for r in range(1, self.length_scales + 1)])
+  def pregenerate_segment_idxs(self, nelems: int) -> None:
+    self.segment_idxs = [generate_vl_segment_idxs(r, nelems, self.shapelet_min_length) for r in range(1, self.length_scales + 1)]
 
   def shapelets_as_homogenous(self):
     h_shapelets = np.zeros((self.length_scales, self.num_shapelets, self.length_scales * self.shapelet_min_length))
