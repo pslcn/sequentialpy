@@ -27,8 +27,7 @@ def generate_h_segment_idxs(length_scales, nelems, shapelet_min_length):
 def centroid_for_shapelets(num_cateories, init_with_centroids):
   # disregard timesteps (x-axis)
   centroid = k_means.k_means_with_centroids(num_categories, np.dstack((np.arange(0, init_with_centroids.shape[0]) + 1, init_with_centroids))[0], init_with_centroids.shape[0])[1]
-  centroid = centroid.reshape((2))[1]
-  return centroid
+  return centroid.reshape((2))[1]
 
 
 @nb.njit(parallel=True)
@@ -39,7 +38,7 @@ def numba_mean_3d(x):
       arr_mean[i][j] = np.mean(x[i, j])
   return arr_mean
 
-@nb.njit
+@nb.njit(inline="always")
 def shapelet_dists(series_segments, shapelets):
   # shape of dists: (number of shapelets, number of segments)
   return numba_mean_3d((series_segments - shapelets) ** 2).T
