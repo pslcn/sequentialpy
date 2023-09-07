@@ -29,18 +29,6 @@ def test(shapelet_transform):
     pred = shapelet_transform.forward(test_X[i])
     print(f"[{i}] pred: {np.around(pred.detach().numpy(), 3)} actual: {test_labels[i]}") 
 
-"""
-# K-means
-clusters_k = 6
-data_with_timesteps = np.dstack((np.arange(0, x.shape[0]) + 1, x))[0]
-clusters, centroids = k_means_with_centroids(clusters_k, data_with_timesteps, x.shape[0])
-for k in range(clusters_k):
-  clusters_x, clusters_y = clusters[k][:, 0], clusters[k][:, 1]
-  plt.scatter(clusters_x, clusters_y)
-  plt.scatter(*centroids[k], label="centroid", color="red") 
-plt.show()
-"""
-
 def testing_k_means():
   df = pd.read_csv(COFFEE_TRAIN_LOC)
   train_X = df.iloc[:, 1:].to_numpy()
@@ -96,32 +84,30 @@ if __name__ == "__main__":
       train_labels = df.iloc[:, 0].to_numpy().reshape((-1, 1))
 
       M = np.array([shapelet_transform.transformed_representation(train_X[x_idx])[0] for x_idx in range(train_X.shape[0])])
-      print(M)
+      # print(M)
       clusters_k = 2
       clusters, centroids = k_means.k_means_with_centroids(clusters_k, M, M.shape[0])
+      print(centroids)
+      hyperplane = np.zeros((2))
+      hyperplane[1] = np.divide(*np.subtract(*centroids)[::-1])
+      # hyperplane[0] = centroids[0, 1] - hyperplane[1] * centroids[0, 0]
+      # print(hyperplane)
+      midpoint = np.mean(centroids, axis=0)
+      print(midpoint)
+      # hyperplane[1] = -(1 / hyperplane[1])
+      hyperplane[1] = -(1 / hyperplane[1])
+      hyperplane[0] = midpoint[1] - hyperplane[1] * midpoint[0]
 
-      if 0:
-        clusters_k = 6
-        x = train_X[0]
-        data_with_timesteps = np.dstack((np.arange(0, x.shape[0]) + 1, x))[0]
-        # print(data_with_timesteps.shape) ; exit()
-        clusters, centroids = k_means.k_means_with_centroids(clusters_k, data_with_timesteps, x.shape[0])
-        for k in range(clusters_k):
-          clusters_x, clusters_y = clusters[k][:, 0], clusters[k][:, 1]
-          plt.scatter(clusters_x, clusters_y)
-          plt.scatter(*centroids[k], label="centroid", color="red")
-        plt.tight_layout()
-        handles, labels = plt.gca().get_legend_handles_labels()
-        labels = dict(zip(labels, handles))
-        plt.legend(labels.values(), labels.keys())
-        plt.show()
-      elif 0:
+      if 1:
         plt.xlabel("$M_{1}$")
         plt.ylabel("$M_{2}$")
         for k in range(clusters_k):
           clusters_x, clusters_y = clusters[k][:, 0], clusters[k][:, 1]
           plt.scatter(clusters_x, clusters_y)
           plt.scatter(*centroids[k], label="centroid", color="red")
+        plt.scatter(*midpoint)
+        xx = np.linspace(0, 0.2)
+        plt.plot(xx, xx * hyperplane[1] + hyperplane[0])
         plt.tight_layout()
         handles, labels = plt.gca().get_legend_handles_labels()
         labels = dict(zip(labels, handles))
