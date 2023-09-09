@@ -67,8 +67,11 @@ if __name__ == "__main__":
   clusters, centroids = k_means.k_means_with_centroids(clusters_k, M, M.shape[0])
   print(centroids)
 
-  svm = svm.TorchLinearSVM
-  hyperplane, support_vecs = svm.hyperplane, svm.support_vecs
+  from sequentialpy import svm
+
+  an_svm = svm.TorchLinearSVM(clusters, centroids)
+  hyperplane, support_vecs = [*svm.hyperplane_c.detach().numpy(), *svm.hyperplane_m.detach().numpy()], svm.support_vecs
+  support_vecs = support_vecs.detach().numpy()
 
   ax2.set_xlabel("$M_{1}$")
   ax2.set_ylabel("$M_{2}$")
