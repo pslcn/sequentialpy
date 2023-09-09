@@ -74,27 +74,25 @@ if __name__ == "__main__":
   hyperplane[1] = -(1 / hyperplane[1])
   hyperplane[0] = midpoint[1] - hyperplane[1] * midpoint[0]
 
-  """
+  calc_y_intercept = lambda gradient, through_point: through_point[1] - gradient * through_point[0]
+
   support_vecs = np.zeros((2, 2))
-  support_vecs[0][1], support_vecs[1][1] = hyperplane[1], hyperplane[1]
+  support_vecs[:, 1] = hyperplane[1]
 
-  halfway_midpoints = [np.mean([centroids[0], midpoint], axis=0), np.mean([centroids[1], midpoint], axis=0)]
-  print(halfway_midpoints)
-  support_vecs[0][0], support_vecs[1][0] = halfway_midpoints[0][1] - support_vecs[0][1] * halfway_midpoints[0][0], halfway_midpoints[1][1] - support_vecs[1, 1] * halfway_midpoints[1][0]
-  """
+  def closest_point_to_line(points, line):
+    perpendicular_grad = -(1 / line[1])
+    dists = []
+    for point in points:
+      perpendicular = np.array([point[1] - perpendicular_grad * point[0], perpendicular_grad])
+      intersect_x = (perpendicular[0] - line[0]) / (line[1] - perpendicular[1])
+      intersect_y = line[0] + line[1] * intersect_x
+      dists.append(np.sqrt((point[1] - intersect_y) ** 2 + (point[0] - intersect_x) ** 2))
+    # return dists
+    return np.argmin(dists)
 
-  # Find closest points to hyperplane
-  # Support vectors are: hyperplane[1] and close_point[1] - hyperplane[1] * close_point[0]
-  # Margin is distance between both support vectors
-  # Aim to maximise the margin
-
-  # closest_cluster_points = [get_support_vecs(clusters[0], hyperplane), get_support_vecs(clusters[1], hyperplane)]
-
-  # calc_y_intercept = lambda gradient, through_point: through_point[1] - gradient * through_point[0]
-
-  # support_vecs = np.zeros((2, 2))
-  # support_vecs[0, 1], support_vecs[1, 1] = hyperplane[1], hyperplane[1]
-  # support_vecs[0, 0], support_vecs[1, 0] = calc_y_intercept(support_vecs[0, 1], clusters[0][closest_cluster_points[0]]), calc_y_intercept(support_vecs[1, 1], clusters[1][closest_cluster_points[1]])
+  # print(closest_point_to_line(clusters[0], hyperplane))
+  support_vecs[0, 0] = calc_y_intercept(support_vecs[0, 1], clusters[0][closest_point_to_line(clusters[0], hyperplane)])
+  support_vecs[1, 0] = calc_y_intercept(support_vecs[1, 1], clusters[1][closest_point_to_line(clusters[1], hyperplane)])
 
   ax2.set_xlabel("$M_{1}$")
   ax2.set_ylabel("$M_{2}$")
