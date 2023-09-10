@@ -2,3 +2,4 @@ __pycache__
 /venv
 /weights
 *.egg-info
+.ipynb_checkpoints
