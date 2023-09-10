@@ -69,7 +69,7 @@ def shapelet_transformed_representation(series, shapelets_as_homogenous, num_sha
 # Shapelets(1, 2, 20) -> Shapelets with uniform length of 20
 # Shapelets(1, 2, 20, 4) -> Shapelets with lengths (20, 40, 60, 80)
 class Shapelets:
-  def __init__(self, num_shapelets, num_categories, shapelet_min_length, length_scales=1, lambda_w=0.001, init_with_centroids=None, load_weights=True):
+  def __init__(self, num_shapelets, num_categories, shapelet_min_length, length_scales=1, lambda_w=1e-2, init_with_centroids=None, load_weights=True):
     self.num_shapelets = num_shapelets
     self.num_categories = num_categories
     self.shapelet_min_length = shapelet_min_length
@@ -125,7 +125,7 @@ class Shapelets:
     return torch.sigmoid(out)
 
   def learn(self, x, labels, epochs=1000, lr=0.01):
-    optimiser = optim.Adam([*self.shapelets, self.biases, *self.weights], lr=lr)
+    optimiser = optim.Adam([*self.shapelets, self.biases, *self.weights], lr=lr, weight_decay=self.lambda_w)
     loss = nn.BCELoss()
     self.pregenerate_segment_idxs(x.shape[1])
     epoch_losses = np.zeros((epochs))
