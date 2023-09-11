@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn as nn
 import os
 import numba as nb
+from tqdm import trange
 
 from sequentialpy import k_means
 
@@ -126,11 +127,13 @@ class Shapelets:
 
   def learn(self, x, labels, epochs=1000, lr=0.01):
     optimiser = optim.Adam([*self.shapelets, self.biases, *self.weights], lr=lr, weight_decay=self.lambda_w)
+    # optimiser = optim.SGD([*self.shapelets, self.biases, *self.weights], lr=lr, weight_decay=self.lambda_w)
     loss = nn.BCELoss()
     self.pregenerate_segment_idxs(x.shape[1])
     epoch_losses = np.zeros((epochs))
     labels = torch.tensor(labels, dtype=torch.float64)
-    for e in range(epochs):
+    pbar_epochs = trange(epochs)
+    for e in pbar_epochs:
       for i in range(x.shape[0]):
         optimiser.zero_grad()
         out = self.forward(x[i])
@@ -138,7 +141,7 @@ class Shapelets:
         epoch_losses[e] += total_loss
         total_loss.backward()
         optimiser.step()
-      print(f"epoch: {e + 1} loss: {epoch_losses[e]}")
+      pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_losses[e]}")
 
     print(f"Saving weights in ['{self.save_shapelets_loc}', '{self.save_weights_loc}', '{self.save_biases_loc}']")
     torch.save(self.shapelets, self.save_shapelets_loc)
