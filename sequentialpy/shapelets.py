@@ -126,8 +126,9 @@ class Shapelets:
     return torch.sigmoid(out)
 
   def learn(self, x, labels, epochs=1000, lr=0.01):
-    optimiser = optim.Adam([*self.shapelets, self.biases, *self.weights], lr=lr, weight_decay=self.lambda_w)
-    # optimiser = optim.SGD([*self.shapelets, self.biases, *self.weights], lr=lr, weight_decay=self.lambda_w)
+    # optimiser_shapelets = optim.Adam([*self.shapelets], lr=lr, weight_decay=self.lambda_w)
+    optimiser_shapelets = optim.SGD([*self.shapelets], lr=lr, weight_decay=self.lambda_w)
+    optimiser_linear = optim.Adam([self.biases, *self.weights], lr=lr)
     loss = nn.BCELoss()
     self.pregenerate_segment_idxs(x.shape[1])
     epoch_losses = np.zeros((epochs))
@@ -135,12 +136,15 @@ class Shapelets:
     pbar_epochs = trange(epochs)
     for e in pbar_epochs:
       for i in range(x.shape[0]):
-        optimiser.zero_grad()
+        optimiser_shapelets.zero_grad()
+        optimiser_linear.zero_grad()
         out = self.forward(x[i])
         total_loss = torch.sum(loss(out, labels[i]))
         epoch_losses[e] += total_loss
         total_loss.backward()
-        optimiser.step()
+        optimiser_shapelets.step()
+        optimiser_linear.step()
+      # pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_losses[e]:5.5}")
       pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_losses[e]}")
 
     print(f"Saving weights in ['{self.save_shapelets_loc}', '{self.save_weights_loc}', '{self.save_biases_loc}']")
