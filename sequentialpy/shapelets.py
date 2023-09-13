@@ -131,22 +131,20 @@ class Shapelets:
     optimiser_linear = optim.Adam([self.biases, *self.weights], lr=lr)
     loss = nn.BCELoss()
     self.pregenerate_segment_idxs(x.shape[1])
-    epoch_losses = np.zeros((epochs))
     labels = torch.tensor(labels, dtype=torch.float64)
     pbar_epochs = trange(epochs)
     for e in pbar_epochs:
+      epoch_loss = 0
       for i in range(x.shape[0]):
         optimiser_shapelets.zero_grad()
         optimiser_linear.zero_grad()
         out = self.forward(x[i])
         total_loss = torch.sum(loss(out, labels[i]))
-        epoch_losses[e] += total_loss
+        epoch_loss += total_loss
         total_loss.backward()
         optimiser_shapelets.step()
         optimiser_linear.step()
-      # pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_losses[e]:5.5}")
-      pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_losses[e]}")
-
+      pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_loss}")
     print(f"Saving weights in ['{self.save_shapelets_loc}', '{self.save_weights_loc}', '{self.save_biases_loc}']")
     torch.save(self.shapelets, self.save_shapelets_loc)
     torch.save(self.weights, self.save_weights_loc)
