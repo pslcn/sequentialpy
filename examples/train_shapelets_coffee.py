@@ -21,4 +21,10 @@ train_X, train_labels = shuffle_dataset(train_X, train_labels)
 num_shapelets, shapelet_min_length, length_scales = 2, 20, 4
 shapelet_transform = shapelets.Shapelets(num_shapelets, 1, shapelet_min_length, length_scales=length_scales, load_weights=True)
 
-shapelet_transform.learn(train_X, train_labels, epochs=2000, lr=1e-4)
+def see_shapelets(shapelet_transform):
+  import matplotlib.pyplot as plt
+  for shapelet in shapelet_transform.shapelets:
+    plt.plot(shapelet[0].detach().numpy())
+  plt.show()
+
+shapelet_transform.learn(train_X, train_labels, epochs=500, lr=1e-5)
