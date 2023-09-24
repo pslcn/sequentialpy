@@ -125,6 +125,12 @@ class Shapelets:
     out = self.biases + torch.sum(min_dists_x_weights, dim=0)
     return torch.sigmoid(out)
 
+  def save_parameters(self):
+    print(f"Saving parameters in ['{self.save_shapelets_loc}', '{self.save_weights_loc}', '{self.save_biases_loc}']")
+    torch.save(self.shapelets, self.save_shapelets_loc)
+    torch.save(self.weights, self.save_weights_loc)
+    torch.save(self.biases, self.save_biases_loc)
+
   def learn(self, x, labels, epochs=1000, lr=0.01):
     # optimiser_shapelets = optim.Adam([*self.shapelets], lr=lr, weight_decay=self.lambda_w)
     optimiser_shapelets = optim.SGD([*self.shapelets], lr=lr, weight_decay=self.lambda_w)
@@ -145,7 +151,4 @@ class Shapelets:
         optimiser_shapelets.step()
         optimiser_linear.step()
       pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_loss}")
-    print(f"Saving weights in ['{self.save_shapelets_loc}', '{self.save_weights_loc}', '{self.save_biases_loc}']")
-    torch.save(self.shapelets, self.save_shapelets_loc)
-    torch.save(self.weights, self.save_weights_loc)
-    torch.save(self.biases, self.save_biases_loc)
+    self.save_parameters()
