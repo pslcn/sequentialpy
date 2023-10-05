@@ -9,12 +9,16 @@ from tqdm import trange
 from sequentialpy import k_means
 
 save_folder_path = "weights/"
-def save_info_appendix(num_shapelets, num_categories, shapelet_min_length, length_scales): return f"{num_shapelets}_{num_categories}_{shapelet_min_length}_{length_scales}.pt"
+def save_info_appendix(num_shapelets, num_categories, shapelet_min_length, length_scales): 
+  return f"{num_shapelets}_{num_categories}_{shapelet_min_length}_{length_scales}.pt"
 
 @nb.njit(inline="always")
-def generate_segment_idxs(shapelet_length, nelems): return np.arange(0, shapelet_length, dtype=np.int32) + np.arange(0, nelems - shapelet_length).reshape((-1, 1))
+def generate_segment_idxs(shapelet_length, nelems): 
+  return np.arange(0, shapelet_length, dtype=np.int32) + np.arange(0, nelems - shapelet_length).reshape((-1, 1))
+
 @nb.njit(inline="always")
-def generate_vl_segment_idxs(r, nelems, shapelet_min_length): return generate_segment_idxs(r * shapelet_min_length, nelems)
+def generate_vl_segment_idxs(r, nelems, shapelet_min_length): 
+  return generate_segment_idxs(r * shapelet_min_length, nelems)
 
 @nb.njit
 def generate_h_segment_idxs(length_scales, nelems, shapelet_min_length):
@@ -32,7 +36,7 @@ def centroid_for_shapelets(num_cateories, init_with_centroids):
 
 
 @nb.njit(parallel=True)
-def numba_mean_3d(x):
+def nb_mean3d(x):
   arr_mean = np.zeros((x.shape[:2]))
   for i in range(x.shape[0]):
     for j in range(x.shape[1]):
@@ -42,7 +46,7 @@ def numba_mean_3d(x):
 @nb.njit(inline="always")
 def shapelet_dists(series_segments, shapelets):
   # shape of dists: (number of shapelets, number of segments)
-  return numba_mean_3d((series_segments - shapelets) ** 2).T
+  return nb_mean3d((series_segments - shapelets) ** 2).T
 
 @nb.njit(parallel=True)
 def min_shapelet_dists(dists):
@@ -132,9 +136,7 @@ class Shapelets:
     torch.save(self.biases, self.save_biases_loc)
 
   def learn(self, x, labels, epochs=1000, lr=0.01):
-    # optimiser_shapelets = optim.Adam([*self.shapelets], lr=lr, weight_decay=self.lambda_w)
-    optimiser_shapelets = optim.SGD([*self.shapelets], lr=lr, weight_decay=self.lambda_w)
-    optimiser_linear = optim.Adam([self.biases, *self.weights], lr=lr)
+    optimiser = optim.Adam([self.biases, *self.weights, *self.shapelets], lr=lr, weight_decay=self.lambda_w)
     loss = nn.BCELoss()
     self.pregenerate_segment_idxs(x.shape[1])
     labels = torch.tensor(labels, dtype=torch.float64)
@@ -142,13 +144,11 @@ class Shapelets:
     for e in pbar_epochs:
       epoch_loss = 0
       for i in range(x.shape[0]):
-        optimiser_shapelets.zero_grad()
-        optimiser_linear.zero_grad()
+        optimiser.zero_grad()
         out = self.forward(x[i])
         total_loss = torch.sum(loss(out, labels[i]))
         epoch_loss += total_loss
         total_loss.backward()
-        optimiser_shapelets.step()
-        optimiser_linear.step()
+        optimiser.step()
       pbar_epochs.set_description(f"epoch: {e + 1} loss: {epoch_loss}")
     self.save_parameters()
