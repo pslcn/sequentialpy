@@ -4,7 +4,7 @@ import numba as nb
 @nb.njit 
 def euclidean_distance(a, b):
   return np.sqrt(np.sum((a - b) ** 2))
-
+        
 @nb.njit
 def k_means_clusters_step(centroids, clusters_k, datapoints, nelems):
   clusters = np.zeros((clusters_k, nelems, 2))

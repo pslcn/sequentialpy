@@ -136,7 +136,10 @@ class Shapelets:
     torch.save(self.biases, self.save_biases_loc)
 
   def learn(self, x, labels, epochs=1000, lr=0.01):
-    optimiser = optim.Adam([self.biases, *self.weights, *self.shapelets], lr=lr, weight_decay=self.lambda_w)
+    optimiser = optim.Adam([
+                              {"params": [self.biases, *self.weights]},
+                              {"params": self.shapelets, "weight_decay": self.lambda_w},
+                            ], lr=lr, betas=(0.9, 0.999), eps=1e-08)
     loss = nn.BCELoss()
     self.pregenerate_segment_idxs(x.shape[1])
     labels = torch.tensor(labels, dtype=torch.float64)
